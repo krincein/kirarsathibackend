@@ -45,6 +45,29 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 1, // 1–5
     },
+    images: {
+      profileUrl: String,
+      imageCollectionUrl: [String],
+    },
+    basicInfo: {
+      gender: String,
+      dateOfBirth: Date,
+      placeOfBirth: String,
+      timeOfBirth: String,
+      mySelf: String,
+    },
+    familyInfo: {
+      fatherName: String,
+      motherName: String,
+      fatherOccupation: String,
+      motherOccupation: String,
+      fatherPhoneNo: String,
+      numberOfBrothers: Number,
+      numberOfSisters: Number,
+      numberOfMarriedBrothers: Number,
+      numberOfMarriedSisters: Number,
+    },
+
   },
   { timestamps: true }
 );
