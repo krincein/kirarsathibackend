@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
       enum: ["active", "blocked", "deleted", "pending"],
       default: "pending",
     },
+    // To track how far user has completed onboarding
+    onboardingStep: {
+      type: Number,
+      default: 1, // 1–5
+    },
   },
   { timestamps: true }
 );
