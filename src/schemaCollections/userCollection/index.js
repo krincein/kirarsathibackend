@@ -62,7 +62,53 @@ const userSchema = new mongoose.Schema(
       imageCollectionUrls: [String],
     },
 
-    verified: { type: Boolean, enum: [true, false], default: false },
+    basic_information: {
+      gender: {
+        type: String,
+        enum: ["male", "female", "other"],
+      },
+      skinTone: {
+        type: String,
+        enum: ["Fair", "Light", "Medium", "Dark", "Very Dark", "Other"],
+      },
+      bodyType: {
+        type: String,
+        enum: ["Slim", "Athletic", "Muscular", "Average", "Heavy", "Other"],
+      },
+      dateOfBirth: Date,
+      placeOfBirth: String,
+      timeOfBirth: String,
+      height: String,
+      weight: String,
+      bloodGroup: String,
+      manglik: { type: Boolean, default: false },
+      rashi: String,
+      cast: String,
+      subcast: String,
+      gotra: String,
+      motherCast: String,
+      motherSubcast: String,
+      motherGotra: String,
+      physicalStatus: { type: Boolean, default: false },
+      drink: { type: Boolean, default: false },
+      smoke: { type: Boolean, default: false },
+      aboutMySelf: [String],
+      criminalRecord: { type: Boolean, default: false },
+      criminalDetails: String,
+      lookingFor: {
+        type: String,
+        enum: [
+          "My self",
+          "Son",
+          "Daughter",
+          "Brother",
+          "Sister",
+          "Relative",
+          "Friend",
+        ],
+      },
+      vegitarian: { type: Boolean, default: false },
+    },
 
     education_occupation: {
       educationLevel: {
@@ -90,54 +136,6 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-    basic_information: {
-      gender: {
-        type: String,
-        enum: ["male", "female", "other"],
-      },
-      skinTone: {
-        type: String,
-        enum: ["Fair", "Light", "Medium", "Dark", "Very Dark", "Other"],
-      },
-      bodyType: {
-        type: String,
-        enum: ["Slim", "Athletic", "Muscular", "Average", "Heavy", "Other"],
-      },
-      dateOfBirth: String,
-      placeOfBirth: String,
-      timeOfBirth: String,
-      height: String,
-      weight: String,
-      bloodGroup: String,
-      manglik: { type: Boolean, enum: [true, false], default: false },
-      rashi: String,
-      cast: String,
-      subcast: String,
-      gotra: String,
-      motherCast: String,
-      motherSubcast: String,
-      motherGotra: String,
-      physicalStatus: { type: Boolean, enum: [true, false], default: false },
-      drink: { type: Boolean, enum: [true, false], default: false },
-      smoke: { type: Boolean, enum: [true, false], default: false },
-      aboutMySelf: [String],
-      criminalRecord: { type: Boolean, enum: [true, false], default: false },
-      criminalDetails: String,
-      lokkingFor: {
-        type: String,
-        enum: [
-          "My self",
-          "Son",
-          "Daughter",
-          "Brother",
-          "Sister",
-          "Relative",
-          "Friend",
-        ],
-      },
-      vegitarian: { type: Boolean, enum: [true, false], default: false },
-    },
-
     family_contact_address: {
       addressDetails: {
         country: String,
@@ -155,7 +153,7 @@ const userSchema = new mongoose.Schema(
         noOfSisters: Number,
         noOfMarriedBrothers: Number,
         noOfMarriedSisters: Number,
-        farming: { type: Boolean, enum: [true, false], default: false },
+        farming: { type: Boolean, default: false },
         farmingDetails: String,
       },
       contactDetails: [
@@ -167,16 +165,16 @@ const userSchema = new mongoose.Schema(
       ],
     },
 
-    hobbies_intrest_skills: {
-      hobbies: [String],
-      intrests: [String],
-      skills: [String],
-    },
-
     partner_preference: {
       education: [String],
       occupation: [String],
       aboutPartner: [String],
+    },
+
+    hobbies_interests_skills: {
+      hobbies: [String],
+      interests: [String],
+      skills: [String],
     },
 
     likes: [

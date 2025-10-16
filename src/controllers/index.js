@@ -1,5 +1,5 @@
 const { signupController, loginController, logoutController, getProfileByIdController } = require("./authUserControllers");
-const { toggleLikesController, shortListUserController } = require("./userActionController");
+const { toggleLikesController, shortListUserController, updateOnboardingController } = require("./userActionController");
 const { updateStatusController } = require("./adminControllers");
 
 module.exports = {
@@ -9,5 +9,6 @@ module.exports = {
   getProfileByIdController,
   toggleLikesController,
   shortListUserController,
+  updateOnboardingController,
   updateStatusController,
 };

@@ -1,15 +1,16 @@
 const express = require("express");
 const app = require("../../../main");
 
-const { toggleLikesController, shortListUserController } = require("../../controllers");
+const { toggleLikesController, shortListUserController, updateOnboardingController } = require("../../controllers");
 
 const { isAuthorized } = require("../../middleware");
 
-const likeUserRoute = express.Router();
+const userActionRoute = express.Router();
 
-likeUserRoute.route("/toggle-like/:targetUserId").post(isAuthorized, toggleLikesController);
-likeUserRoute.route("/short-list/:targetUserId").post(isAuthorized, shortListUserController);
+userActionRoute.route("/toggle-like/:targetUserId").post(isAuthorized, toggleLikesController);
+userActionRoute.route("/short-list/:targetUserId").post(isAuthorized, shortListUserController);
+userActionRoute.route("/update-onboarding").post(isAuthorized, updateOnboardingController);
 
-const likeUser = app.use("/", likeUserRoute);
+const userAction = app.use("/", userActionRoute);
 
-module.exports = { likeUser };
+module.exports = { userAction };

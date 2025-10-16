@@ -1,9 +1,9 @@
 const { authUser } = require("./authUserRoutes");
-const { likeUser } = require("./userActionRoutes");
+const { userAction } = require("./userActionRoutes");
 const { admin } = require("./adminRoutes");
 
 module.exports = {
   authUser,
-  likeUser,
+  userAction,
   admin,
 };
