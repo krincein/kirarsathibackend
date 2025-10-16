@@ -206,7 +206,7 @@ const updateOnboardingController = async (req, res) => {
 
 const getMyProfileController = async (req, res) => {
   try {
-    const userId = req.user?._id; 
+    const userId = req.user?._id;
 
     if (!userId) {
       return res.status(401).json({
@@ -247,7 +247,7 @@ const getProfileByIdController = async (request, response) => {
     const userId = request.params.id;
 
     // Find user by ID, exclude password field
-    const user = await UserSchema.findById(userId).select('-password');
+    const user = await UserSchema.findById(userId).select("-password");
 
     if (!user) {
       return response.status(404).json({
@@ -270,6 +270,90 @@ const getProfileByIdController = async (request, response) => {
   }
 };
 
+const getGenderBasedProfilesController = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized access. Token missing or invalid.",
+      });
+    }
+
+    // Fetch logged-in user
+    const currentUser = await UserSchema.findById(userId).select(
+      "basic_information.gender status"
+    );
+
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    // ✅ Check if user is active
+    if (currentUser.status !== "active") {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Your account is not active. Please complete onboarding or contact support.",
+        alert: true, // 👈 frontend can use this to show a toast/alert
+      });
+    }
+
+    // ✅ Ensure gender exists
+    if (!currentUser.basic_information?.gender) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Your gender information is missing. Please complete your basic profile first.",
+      });
+    }
+
+    const userGender = currentUser.basic_information.gender;
+
+    // ✅ Determine the opposite gender
+    let targetGender;
+    if (userGender === "male") targetGender = "female";
+    else if (userGender === "female") targetGender = "male";
+    else targetGender = null;
+
+    if (!targetGender) {
+      return res.status(400).json({
+        success: false,
+        message: "No matching gender preference found.",
+      });
+    }
+
+    // ✅ Fetch opposite-gender users
+    const oppositeGenderProfiles = await UserSchema.find({
+      "basic_information.gender": targetGender,
+      status: "active", // only show active users
+      _id: { $ne: userId }, // exclude current user
+    })
+      .select("fullName images basic_information likes")
+      .limit(50)
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: `Fetched ${targetGender} profiles successfully.`,
+      count: oppositeGenderProfiles.length,
+      data: oppositeGenderProfiles,
+    });
+  } catch (error) {
+    console.error("Get Gender-Based Profiles Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching profiles.",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = { getGenderBasedProfilesController };
 
 module.exports = {
   toggleLikesController,
@@ -277,4 +361,5 @@ module.exports = {
   updateOnboardingController,
   getMyProfileController,
   getProfileByIdController,
+  getGenderBasedProfilesController,
 };
