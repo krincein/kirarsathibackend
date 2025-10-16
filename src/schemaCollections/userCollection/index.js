@@ -9,12 +9,14 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, "Please enter your email address."],
       unique: true,
       sparse: true,
       lowercase: true,
       trim: true,
-      match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please provide a valid email address."],
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Please provide a valid email address.",
+      ],
     },
     phoneNo: {
       type: String,
@@ -37,37 +39,159 @@ const userSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["active", "blocked", "deleted", "pending"],
+      enum: ["active", "blocked", "married", "muted", "pending"],
       default: "pending",
     },
-    // To track how far user has completed onboarding
-    onboardingStep: {
-      type: Number,
-      default: 1, // 1–5
-    },
-    images: {
-      profileUrl: String,
-      imageCollectionUrl: [String],
-    },
-    basicInfo: {
-      gender: String,
-      dateOfBirth: Date,
-      placeOfBirth: String,
-      timeOfBirth: String,
-      mySelf: String,
-    },
-    familyInfo: {
-      fatherName: String,
-      motherName: String,
-      fatherOccupation: String,
-      motherOccupation: String,
-      fatherPhoneNo: String,
-      numberOfBrothers: Number,
-      numberOfSisters: Number,
-      numberOfMarriedBrothers: Number,
-      numberOfMarriedSisters: Number,
+
+    onboarding: {
+      status: {
+        type: String,
+        enum: ["not_started", "in_progress", "completed"],
+        default: "not_started",
+      },
+      step: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 1,
+      },
     },
 
+    images: {
+      profileUrl: String,
+      imageCollectionUrls: [String],
+    },
+
+    verified: { type: Boolean, enum: [true, false], default: false },
+
+    education_occupation: {
+      educationLevel: {
+        type: String,
+        enum: [
+          "Bachelors",
+          "Masters",
+          "Doctorate",
+          "Diploma",
+          "Undergraduate",
+          "Associate degree",
+          "High school",
+          "Secondary school",
+          "Primary school",
+        ],
+      },
+      educationField: String,
+      occupation: String,
+      occupationDetails: String,
+      income: String,
+      jobLocation: {
+        country: String,
+        state: String,
+        city: String,
+      },
+    },
+
+    basic_information: {
+      gender: {
+        type: String,
+        enum: ["male", "female", "other"],
+      },
+      skinTone: {
+        type: String,
+        enum: ["Fair", "Light", "Medium", "Dark", "Very Dark", "Other"],
+      },
+      bodyType: {
+        type: String,
+        enum: ["Slim", "Athletic", "Muscular", "Average", "Heavy", "Other"],
+      },
+      dateOfBirth: String,
+      placeOfBirth: String,
+      timeOfBirth: String,
+      height: String,
+      weight: String,
+      bloodGroup: String,
+      manglik: { type: Boolean, enum: [true, false], default: false },
+      rashi: String,
+      cast: String,
+      subcast: String,
+      gotra: String,
+      motherCast: String,
+      motherSubcast: String,
+      motherGotra: String,
+      physicalStatus: { type: Boolean, enum: [true, false], default: false },
+      drink: { type: Boolean, enum: [true, false], default: false },
+      smoke: { type: Boolean, enum: [true, false], default: false },
+      aboutMySelf: [String],
+      criminalRecord: { type: Boolean, enum: [true, false], default: false },
+      criminalDetails: String,
+      lokkingFor: {
+        type: String,
+        enum: [
+          "My self",
+          "Son",
+          "Daughter",
+          "Brother",
+          "Sister",
+          "Relative",
+          "Friend",
+        ],
+      },
+      vegitarian: { type: Boolean, enum: [true, false], default: false },
+    },
+
+    family_contact_address: {
+      addressDetails: {
+        country: String,
+        state: String,
+        city: String,
+        address: String,
+        pincode: String,
+      },
+      familyMembers: {
+        fatherName: String,
+        motherName: String,
+        fatherOccupation: String,
+        motherOccupation: String,
+        noOfBrothers: Number,
+        noOfSisters: Number,
+        noOfMarriedBrothers: Number,
+        noOfMarriedSisters: Number,
+        farming: { type: Boolean, enum: [true, false], default: false },
+        farmingDetails: String,
+      },
+      contactDetails: [
+        {
+          name: String,
+          phoneNo: String,
+          relationship: String,
+        },
+      ],
+    },
+
+    hobbies_intrest_skills: {
+      hobbies: [String],
+      intrests: [String],
+      skills: [String],
+    },
+
+    partner_preference: {
+      education: [String],
+      occupation: [String],
+      aboutPartner: [String],
+    },
+
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // references the User model
+      },
+    ],
+
+    shortListed: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User", // references the User model
+      },
+    ],
   },
   { timestamps: true }
 );
