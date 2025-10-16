@@ -180,14 +180,21 @@ const userSchema = new mongoose.Schema(
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // references the User model
+        ref: "User"
       },
     ],
 
     shortListed: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User", // references the User model
+        ref: "User"
+      },
+    ],
+
+    pendingShortlistRequests: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
       },
     ],
   },

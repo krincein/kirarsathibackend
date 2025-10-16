@@ -56,61 +56,6 @@ const toggleLikesController = async (request, response) => {
   }
 };
 
-const shortListUserController = async (request, response) => {
-  try {
-    const targetUserId = request?.params?.targetUserId;
-    const currentUserId = request?.user?._id;
-
-    if (currentUserId.equals(targetUserId)) {
-      return response.status(400).json({
-        success: false,
-        message: "You cannot shortlist your own profile.",
-      });
-    }
-
-    const currentUser = await UserSchema.findById(currentUserId);
-    const targetUser = await UserSchema.findById(targetUserId);
-
-    if (!targetUser) {
-      return response.status(404).json({
-        success: false,
-        message: "Target user not found.",
-      });
-    }
-
-    const isShortListed = currentUser.shortListed.includes(targetUserId);
-
-    if (isShortListed) {
-      // Unlike
-      currentUser.shortListed.pull(targetUserId);
-      await currentUser.save();
-
-      return response.status(200).json({
-        success: true,
-        message: "Unshortlisted successfully.",
-        shortlisted: false,
-      });
-    } else {
-      // Like
-      currentUser.shortListed.push(targetUserId);
-      await currentUser.save();
-
-      return response.status(200).json({
-        success: true,
-        message: "User shortlisted successfully.",
-        shortlisted: true,
-      });
-    }
-  } catch (error) {
-    console.error("ShortList Error:", error);
-    return response.status(500).json({
-      success: false,
-      message: "Server error while shortListing.",
-      error: error.message,
-    });
-  }
-};
-
 const updateOnboardingController = async (req, res) => {
   try {
     const userId = req?.user?._id; // taken from JWT middleware
@@ -352,14 +297,184 @@ const getGenderBasedProfilesController = async (req, res) => {
     });
   }
 };
+// ✅ Send Shortlist Request
+const sendShortlistRequestController = async (req, res) => {
+  try {
+    const targetUserId = req.params.targetUserId;
+    const currentUserId = req.user._id;
 
-module.exports = { getGenderBasedProfilesController };
+    if (currentUserId.equals(targetUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot shortlist your own profile.",
+      });
+    }
+
+    const targetUser = await UserSchema.findById(targetUserId);
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Target user not found.",
+      });
+    }
+
+    // Check if already shortlisted or requested
+    if (
+      targetUser.pendingShortlistRequests.includes(currentUserId) ||
+      targetUser.shortListed.includes(currentUserId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "You have already sent a request or are already shortlisted.",
+      });
+    }
+
+    targetUser.pendingShortlistRequests.push(currentUserId);
+    await targetUser.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Shortlist request sent successfully.",
+    });
+  } catch (error) {
+    console.error("Shortlist Request Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while sending shortlist request.",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Accept Shortlist Request
+const acceptShortlistRequestController = async (req, res) => {
+  try {
+    const requesterId = req.params.requesterId; // the user who sent the request
+    const currentUserId = req.user._id; // the one accepting
+
+    const currentUser = await UserSchema.findById(currentUserId);
+    const requesterUser = await UserSchema.findById(requesterId);
+
+    if (!requesterUser) {
+      return res.status(404).json({
+        success: false,
+        message: "Requester not found.",
+      });
+    }
+
+    // Ensure a pending request exists
+    if (!currentUser.pendingShortlistRequests.includes(requesterId)) {
+      return res.status(400).json({
+        success: false,
+        message: "No pending shortlist request from this user.",
+      });
+    }
+
+    // Remove pending request
+    currentUser.pendingShortlistRequests.pull(requesterId);
+
+    // Add to mutual shortlists
+    currentUser.shortListed.push(requesterId);
+    requesterUser.shortListed.push(currentUserId);
+
+    await currentUser.save();
+    await requesterUser.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Shortlist request accepted successfully.",
+    });
+  } catch (error) {
+    console.error("Accept Shortlist Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while accepting shortlist request.",
+      error: error.message,
+    });
+  }
+};
+
+const getPendingShortlistRequestsController = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+
+    // populate basic info about senders
+    const currentUser = await UserSchema.findById(currentUserId)
+      .populate("pendingShortlistRequests", "fullName email images.profileUrl basic_information.gender");
+
+    res.status(200).json({
+      success: true,
+      message: "Pending shortlist requests fetched successfully.",
+      totalRequests: currentUser.pendingShortlistRequests.length,
+      requests: currentUser.pendingShortlistRequests,
+    });
+  } catch (error) {
+    console.error("Get Pending Requests Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching pending requests.",
+      error: error.message,
+    });
+  }
+};
+
+
+const getShortlistStatusController = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const targetUserId = req.params.targetUserId;
+
+    const currentUser = await UserSchema.findById(currentUserId);
+    const targetUser = await UserSchema.findById(targetUserId);
+
+    if (!targetUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    let status = "none"; // default
+
+    if (targetUser.pendingShortlistRequests.includes(currentUserId)) {
+      status = "requested"; // You sent a request, waiting for acceptance
+    }
+
+    if (currentUser.pendingShortlistRequests.includes(targetUserId)) {
+      status = "incoming"; // They sent a request to you
+    }
+
+    if (
+      currentUser.shortListed.includes(targetUserId) &&
+      targetUser.shortListed.includes(currentUserId)
+    ) {
+      status = "accepted"; // Both are connected
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Shortlist status fetched successfully.",
+      status,
+    });
+  } catch (error) {
+    console.error("Get Shortlist Status Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching shortlist status.",
+      error: error.message,
+    });
+  }
+};
 
 module.exports = {
   toggleLikesController,
-  shortListUserController,
   updateOnboardingController,
   getMyProfileController,
   getProfileByIdController,
   getGenderBasedProfilesController,
+  sendShortlistRequestController,
+  acceptShortlistRequestController,
+  getPendingShortlistRequestsController,
+  getShortlistStatusController,
 };

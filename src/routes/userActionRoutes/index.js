@@ -3,11 +3,14 @@ const app = require("../../../main");
 
 const {
   toggleLikesController,
-  shortListUserController,
   updateOnboardingController,
   getMyProfileController,
   getProfileByIdController,
   getGenderBasedProfilesController,
+  sendShortlistRequestController,
+  acceptShortlistRequestController,
+  getPendingShortlistRequestsController,
+  getShortlistStatusController,
 } = require("../../controllers");
 
 const { isAuthorized } = require("../../middleware");
@@ -18,9 +21,6 @@ userActionRoute
   .route("/toggle-like/:targetUserId")
   .post(isAuthorized, toggleLikesController);
 userActionRoute
-  .route("/short-list/:targetUserId")
-  .post(isAuthorized, shortListUserController);
-userActionRoute
   .route("/update-onboarding")
   .post(isAuthorized, updateOnboardingController);
 userActionRoute.route("/my-profile").get(isAuthorized, getMyProfileController);
@@ -30,7 +30,18 @@ userActionRoute
 userActionRoute
   .route("/get-gender-based-profiles")
   .get(isAuthorized, getGenderBasedProfilesController);
-
+userActionRoute
+  .route("/send-shortlist-request/:targetUserId")
+  .post(isAuthorized, sendShortlistRequestController);
+userActionRoute
+  .route("/accept-shortlist-request/:targetUserId")
+  .post(isAuthorized, acceptShortlistRequestController);
+userActionRoute
+  .route("/get-pending-shortlist-requests")
+  .get(isAuthorized, getPendingShortlistRequestsController);
+userActionRoute
+  .route("/get-shortlist-status/:targetUserId")
+  .get(isAuthorized, getShortlistStatusController);
 const userAction = app.use("/", userActionRoute);
 
 module.exports = { userAction };

@@ -5,11 +5,14 @@ const {
 } = require("./authUserControllers");
 const {
   toggleLikesController,
-  shortListUserController,
   updateOnboardingController,
   getMyProfileController,
   getProfileByIdController,
   getGenderBasedProfilesController,
+  sendShortlistRequestController,
+  acceptShortlistRequestController,
+  getPendingShortlistRequestsController,
+  getShortlistStatusController,
 } = require("./userActionController");
 const { updateStatusController } = require("./adminControllers");
 
@@ -19,9 +22,12 @@ module.exports = {
   logoutController,
   getProfileByIdController,
   toggleLikesController,
-  shortListUserController,
   updateOnboardingController,
   getMyProfileController,
   getGenderBasedProfilesController,
+  sendShortlistRequestController,
+  acceptShortlistRequestController,
+  getPendingShortlistRequestsController,
+  getShortlistStatusController,
   updateStatusController,
 };
