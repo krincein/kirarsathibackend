@@ -9,6 +9,6 @@ const adminRoute = express.Router();
 
 adminRoute.route("/update-status/:id").post(isAuthorized, updateStatusController);
 
-const admin = app.use("/", adminRoute);
+const admin = app.use("/admin", adminRoute);
 
 module.exports = { admin };

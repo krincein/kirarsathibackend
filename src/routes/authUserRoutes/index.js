@@ -16,6 +16,6 @@ authUserRoute.route("/signup").post(signupController);
 authUserRoute.route("/login").post(loginController);
 authUserRoute.route("/logout").post(isAuthorized, logoutController);
 
-const authUser = app.use("/", authUserRoute);
+const authUser = app.use("/auth", authUserRoute);
 
 module.exports = { authUser };
