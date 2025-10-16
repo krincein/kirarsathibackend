@@ -187,8 +187,37 @@ const logoutController = async (req, res) => {
   }
 };
 
+const getProfileByIdController = async (request, response) => {
+  try {
+    const userId = request.params.id;
+
+    // Find user by ID, exclude password field
+    const user = await UserSchema.findById(userId).select('-password');
+
+    if (!user) {
+      return response.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error("Get Profile Error:", error);
+    return response.status(500).json({
+      success: false,
+      message: "Server error while fetching profile.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   signupController,
   loginController,
   logoutController,
+  getProfileByIdController,
 };
