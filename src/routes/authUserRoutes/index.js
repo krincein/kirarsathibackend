@@ -5,7 +5,6 @@ const {
   signupController,
   loginController,
   logoutController,
-  getProfileByIdController,
 } = require("../../controllers");
 
 //
@@ -16,8 +15,6 @@ const authUserRoute = express.Router();
 authUserRoute.route("/signup").post(signupController);
 authUserRoute.route("/login").post(loginController);
 authUserRoute.route("/logout").post(isAuthorized, logoutController);
-
-authUserRoute.route("/profile/:id").get(isAuthorized, getProfileByIdController);
 
 const authUser = app.use("/", authUserRoute);
 
