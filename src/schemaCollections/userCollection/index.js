@@ -180,21 +180,25 @@ const userSchema = new mongoose.Schema(
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
       },
     ],
 
     shortListed: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        status: {
+          type: String,
+          enum: ["pending", "accepted", "declined"],
+          default: "pending",
+        },
       },
     ],
 
     pendingShortlistRequests: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
       },
     ],
   },

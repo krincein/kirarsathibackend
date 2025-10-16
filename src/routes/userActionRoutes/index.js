@@ -34,7 +34,7 @@ userActionRoute
   .route("/send-shortlist-request/:targetUserId")
   .post(isAuthorized, sendShortlistRequestController);
 userActionRoute
-  .route("/accept-shortlist-request/:targetUserId")
+  .route("/accept-shortlist-request/:requesterId")
   .post(isAuthorized, acceptShortlistRequestController);
 userActionRoute
   .route("/get-pending-shortlist-requests")
@@ -42,6 +42,7 @@ userActionRoute
 userActionRoute
   .route("/get-shortlist-status/:targetUserId")
   .get(isAuthorized, getShortlistStatusController);
-const userAction = app.use("/", userActionRoute);
+
+const userAction = app.use("/user", userActionRoute);
 
 module.exports = { userAction };
