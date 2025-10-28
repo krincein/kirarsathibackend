@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema(
       required: [true, "Kindly provide your full name."],
       trim: true,
     },
+    
     email: {
       type: String,
       unique: true,
@@ -18,6 +19,7 @@ const userSchema = new mongoose.Schema(
         "Please provide a valid email address.",
       ],
     },
+    
     phoneNo: {
       type: String,
       required: [true, "Kindly provide a phone number."],
@@ -26,17 +28,20 @@ const userSchema = new mongoose.Schema(
       trim: true,
       match: [/^\+?[0-9]{7,15}$/, "Please enter a valid phone number."],
     },
+
     password: {
       type: String,
       required: [true, "Please set up a password to continue."],
       minlength: [8, "Your password should be at least 8 characters long."],
       select: false,
     },
+
     role: {
       type: String,
       enum: ["user", "admin", "superadmin"],
       default: "user",
     },
+
     status: {
       type: String,
       enum: ["active", "blocked", "married", "muted", "pending"],
