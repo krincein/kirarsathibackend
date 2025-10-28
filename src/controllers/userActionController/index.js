@@ -1,6 +1,9 @@
 //Importing schema
 const { UserSchema } = require("../../schemaCollections");
 
+//Importing file upload controller
+const { uploadSingleFile, uploadMultipleFiles, upload } = require("./fileUploadToS3");
+
 const toggleLikesController = async (request, response) => {
   try {
     const targetUserId = request?.params?.targetUserId;
@@ -278,7 +281,7 @@ const getGenderBasedProfilesController = async (req, res) => {
       status: "active", // only show active users
       _id: { $ne: userId }, // exclude current user
     })
-      .select("fullName images basic_information likes")
+      .select("fullName images basic_information likes education_occupation")
       .limit(50)
       .sort({ createdAt: -1 });
 
@@ -500,4 +503,7 @@ module.exports = {
   acceptShortlistRequestController,
   getPendingShortlistRequestsController,
   getShortlistStatusController,
+  uploadSingleFile,
+  uploadMultipleFiles,
+  upload
 };
