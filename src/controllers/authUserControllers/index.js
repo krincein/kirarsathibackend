@@ -16,11 +16,19 @@ const signupController = async (request, response) => {
   try {
     const { email, password, fullName, role, phoneNo } = request.body;
 
-    // 1️⃣ Basic validation
-    if (!email || !password || !fullName || !phoneNo) {
+    // 1️⃣ Basic validation: Check which fields are missing
+    const requiredFields = ["email", "password", "fullName", "phoneNo"];
+    const missingFields = requiredFields.filter((field) => !request.body[field]);
+
+    if (missingFields.length > 0) {
+      const message =
+        missingFields.length === 1
+          ? `${missingFields[0]} field is missing.`
+          : `${missingFields.join(" and ")} fields are missing.`;
+
       return response.status(400).json({
         success: false,
-        message: "All fields are required.",
+        message,
       });
     }
 
