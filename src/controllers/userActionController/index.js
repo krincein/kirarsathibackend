@@ -259,6 +259,15 @@ const getGenderBasedProfilesController = async (req, res) => {
       });
     }
 
+    if (currentUser.status === "married") {
+      return res.status(403).json({
+        success: false,
+        message: "You are already married. Your profile is no longer available for matchmaking.",
+        alert: true,
+      });
+    }
+
+
     if (currentUser.status !== "active") {
       return res.status(403).json({
         success: false,
@@ -491,7 +500,7 @@ const getShortlistStatusController = async (req, res) => {
       currentUser.shortListed.includes(targetUserId) &&
       targetUser.shortListed.includes(currentUserId)
     ) {
-      status = "accepted"; 
+      status = "accepted";
     }
 
     res.status(200).json({
