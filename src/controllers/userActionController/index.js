@@ -247,6 +247,7 @@ const getGenderBasedProfilesController = async (req, res) => {
         success: false,
         message:
           "Your account is not active. Please contact support admin.",
+        alert: true
       });
     }
 
