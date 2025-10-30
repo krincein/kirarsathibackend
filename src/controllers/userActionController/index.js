@@ -222,6 +222,7 @@ const getGenderBasedProfilesController = async (req, res) => {
   try {
     const userId = req.user?._id;
 
+    // ✅ 1. Auth check
     if (!userId) {
       return res.status(401).json({
         success: false,
@@ -229,7 +230,7 @@ const getGenderBasedProfilesController = async (req, res) => {
       });
     }
 
-    // Fetch logged-in user
+    // ✅ 2. Fetch current user
     const currentUser = await UserSchema.findById(userId).select(
       "basic_information.gender status"
     );
@@ -241,50 +242,65 @@ const getGenderBasedProfilesController = async (req, res) => {
       });
     }
 
-    // ✅ Check if user is active
+    // ✅ 3. Handle user status conditions
+    if (currentUser.status === "blocked") {
+      return res.status(403).json({
+        success: false,
+        message: "You are blocked by admin. Please contact support.",
+        alert: true,
+      });
+    }
+
+    if (currentUser.status === "muted") {
+      return res.status(403).json({
+        success: false,
+        message: "Your subscription plan or some other requirement is pending. Please upgrade or complete the necessary steps.",
+        alert: true,
+      });
+    }
+
     if (currentUser.status !== "active") {
       return res.status(403).json({
         success: false,
-        message:
-          "Your account is not active. Please contact support admin.",
-        alert: true
+        message: "Your account is not active. Please contact support admin.",
+        alert: true,
       });
     }
 
-    // ✅ Ensure gender exists
-    if (!currentUser.basic_information?.gender) {
+    // ✅ 4. Ensure gender info
+    const userGender = currentUser.basic_information?.gender;
+    if (!userGender) {
       return res.status(400).json({
         success: false,
-        message:
-          "Your gender information is missing. Please complete your basic profile first.",
+        message: "Your gender information is missing. Please complete your basic profile first.",
+        alert: true,
       });
     }
 
-    const userGender = currentUser.basic_information.gender;
-
-    // ✅ Determine the opposite gender
-    let targetGender;
-    if (userGender === "male") targetGender = "female";
-    else if (userGender === "female") targetGender = "male";
-    else targetGender = null;
+    // ✅ 5. Determine target gender
+    const genderMap = { male: "female", female: "male" };
+    const targetGender = genderMap[userGender];
 
     if (!targetGender) {
       return res.status(400).json({
         success: false,
-        message: "No matching gender preference found.",
+        message: "Invalid gender or no matching gender preference found.",
       });
     }
 
-    // ✅ Fetch opposite-gender users
+    // ✅ 6. Fetch opposite-gender profiles (excluding current user)
     const oppositeGenderProfiles = await UserSchema.find({
       "basic_information.gender": targetGender,
-      status: "active", // only show active users
-      _id: { $ne: userId }, // exclude current user
+      status: "active",
+      _id: { $ne: userId },
     })
-      .select("fullName images basic_information likes education_occupation")
+      .select(
+        "fullName profileUrl imageCollectionUrls basic_information likes education_occupation createdAt"
+      )
       .limit(50)
       .sort({ createdAt: -1 });
 
+    // ✅ 7. Return success response
     return res.status(200).json({
       success: true,
       message: `Fetched ${targetGender} profiles successfully.`,
@@ -292,7 +308,7 @@ const getGenderBasedProfilesController = async (req, res) => {
       data: oppositeGenderProfiles,
     });
   } catch (error) {
-    console.error("Get Gender-Based Profiles Error:", error);
+    console.error("❌ Error in getGenderBasedProfilesController:", error);
     return res.status(500).json({
       success: false,
       message: "Server error while fetching profiles.",
