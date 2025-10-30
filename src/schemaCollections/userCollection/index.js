@@ -89,30 +89,16 @@ const userSchema = new mongoose.Schema(
       manglik: { type: Boolean, default: false },
       rashi: String,
       cast: String,
-      subcast: String,
       gotra: String,
       motherCast: String,
-      motherSubcast: String,
       motherGotra: String,
-      physicalStatus: { type: Boolean, default: false },
+      physicalDisability: { type: Boolean, default: false },
+      vegitarian: { type: Boolean, default: false },
       drink: { type: Boolean, default: false },
       smoke: { type: Boolean, default: false },
       aboutMySelf: [String],
       criminalRecord: { type: Boolean, default: false },
       criminalDetails: String,
-      lookingFor: {
-        type: String,
-        enum: [
-          "My self",
-          "Son",
-          "Daughter",
-          "Brother",
-          "Sister",
-          "Relative",
-          "Friend",
-        ],
-      },
-      vegitarian: { type: Boolean, default: false },
     },
 
     education_occupation: {
@@ -134,21 +120,10 @@ const userSchema = new mongoose.Schema(
       occupation: String,
       occupationDetails: String,
       income: String,
-      jobLocation: {
-        country: String,
-        state: String,
-        city: String,
-      },
+      jobLocation: String,
     },
 
     family_contact_address: {
-      addressDetails: {
-        country: String,
-        state: String,
-        city: String,
-        address: String,
-        pincode: String,
-      },
       familyMembers: {
         fatherName: String,
         motherName: String,
@@ -161,11 +136,12 @@ const userSchema = new mongoose.Schema(
         farming: { type: Boolean, default: false },
         farmingDetails: String,
       },
+      addressDetails: String,
       contactDetails: [
         {
           name: String,
-          phoneNo: String,
           relationship: String,
+          phoneNo: String,
         },
       ],
     },

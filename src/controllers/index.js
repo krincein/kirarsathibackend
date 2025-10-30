@@ -3,6 +3,7 @@ const {
   loginController,
   logoutController,
 } = require("./authUserControllers");
+
 const {
   toggleLikesController,
   updateOnboardingController,
@@ -13,8 +14,10 @@ const {
   acceptShortlistRequestController,
   getPendingShortlistRequestsController,
   getShortlistStatusController,
+  updateUserImages,
+  addImageToCollection
 } = require("./userActionController");
-const { updateStatusController } = require("./adminControllers");
+const { updateStatusController, updateUserRoleController, getAllUsersController } = require("./adminControllers");
 
 module.exports = {
   signupController,
@@ -30,4 +33,8 @@ module.exports = {
   getPendingShortlistRequestsController,
   getShortlistStatusController,
   updateStatusController,
+  updateUserRoleController,
+  getAllUsersController,
+  updateUserImages,
+  addImageToCollection
 };

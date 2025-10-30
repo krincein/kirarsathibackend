@@ -475,7 +475,7 @@ const getShortlistStatusController = async (req, res) => {
       currentUser.shortListed.includes(targetUserId) &&
       targetUser.shortListed.includes(currentUserId)
     ) {
-      status = "accepted"; // Both accepted
+      status = "accepted"; 
     }
 
     res.status(200).json({
@@ -493,6 +493,102 @@ const getShortlistStatusController = async (req, res) => {
   }
 };
 
+const updateUserImages = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { profileUrl } = req.body;
+
+    if (!profileUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Profile URL is required.",
+      });
+    }
+
+    const user = await UserSchema.findByIdAndUpdate(
+      userId,
+      { "images.profileUrl": profileUrl },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile image updated successfully.",
+      profileUrl: user.images.profileUrl,
+    });
+  } catch (error) {
+    console.error("Update Profile Image Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while updating profile image.",
+      error: error.message,
+    });
+  }
+};
+
+const addImageToCollection = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { imageCollectionUrls } = req.body;
+
+    if (!imageCollectionUrls) {
+      return res.status(400).json({
+        success: false,
+        message: "Collection of image URLs is required.",
+      });
+    }
+
+    const user = await UserSchema.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    const existingImages = user.images?.imageCollectionUrls || [];
+    const newImages = Array.isArray(imageCollectionUrls)
+      ? imageCollectionUrls
+      : [imageCollectionUrls];
+
+    // ✅ Check limit
+    if (existingImages.length + newImages.length > 5) {
+      return res.status(400).json({
+        success: false,
+        message: "You can only have up to 5 images in your collection.",
+        currentCount: existingImages.length,
+      });
+    }
+
+    // ✅ Add new image(s)
+    const updatedUser = await UserSchema.findByIdAndUpdate(
+      userId,
+      { $push: { "images.imageCollectionUrls": { $each: newImages } } },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Image(s) added to collection successfully.",
+      imageCollectionUrls: updatedUser.images.imageCollectionUrls,
+    });
+  } catch (error) {
+    console.error("Add Image To Collection Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while adding image to collection.",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   toggleLikesController,
   updateOnboardingController,
@@ -505,5 +601,7 @@ module.exports = {
   getShortlistStatusController,
   uploadSingleFile,
   uploadMultipleFiles,
-  upload
+  upload,
+  updateUserImages,
+  addImageToCollection
 };

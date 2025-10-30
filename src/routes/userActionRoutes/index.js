@@ -11,6 +11,8 @@ const {
   acceptShortlistRequestController,
   getPendingShortlistRequestsController,
   getShortlistStatusController,
+  updateUserImages,
+  addImageToCollection
 } = require("../../controllers");
 
 const { isAuthorized } = require("../../middleware");
@@ -42,6 +44,15 @@ userActionRoute
 userActionRoute
   .route("/get-shortlist-status/:targetUserId")
   .get(isAuthorized, getShortlistStatusController);
+
+
+userActionRoute
+  .route("/update-user-images")
+  .post(isAuthorized, updateUserImages);
+userActionRoute
+  .route("/add-image-to-collection")
+  .post(isAuthorized, addImageToCollection);
+
 
 const userAction = app.use("/user", userActionRoute);
 
