@@ -246,8 +246,7 @@ const getGenderBasedProfilesController = async (req, res) => {
       return res.status(403).json({
         success: false,
         message:
-          "Your account is not active. Please complete onboarding or contact support.",
-        alert: true, // 👈 frontend can use this to show a toast/alert
+          "Your account is not active. Please contact support admin.",
       });
     }
 
