@@ -96,7 +96,6 @@ const userSchema = new mongoose.Schema(
       vegitarian: { type: Boolean, default: false },
       drink: { type: Boolean, default: false },
       smoke: { type: Boolean, default: false },
-      aboutMySelf: [String],
       criminalRecord: { type: Boolean, default: false },
       criminalDetails: String,
     },
@@ -147,9 +146,9 @@ const userSchema = new mongoose.Schema(
     },
 
     partner_preference: {
-      education: [String],
-      occupation: [String],
-      aboutPartner: [String],
+      education: String,
+      occupation: String,
+      aboutPartner: String,
     },
 
     hobbies_interests_skills: {

@@ -151,5 +151,37 @@ const getAllUsersController = async (req, res) => {
   }
 };
 
-module.exports = { updateStatusController, updateUserRoleController, getAllUsersController };
+// controllers/admin/getUserCountController.js
+
+const getUserCountController = async (req, res) => {
+  try {
+    const totalUsers = await UserSchema.countDocuments(); // count all users
+    const activeUsers = await UserSchema.countDocuments({ status: "active" });
+    const blockedUsers = await UserSchema.countDocuments({ status: "blocked" });
+    const pendingUsers = await UserSchema.countDocuments({ status: "pending" });
+    const marriedUsers = await UserSchema.countDocuments({ status: "married" });
+    const mutedUsers = await UserSchema.countDocuments({ status: "muted" });
+
+    return res.status(200).json({
+      success: true,
+      message: "User statistics fetched successfully",
+      data: {
+        totalUsers,
+        activeUsers,
+        blockedUsers,
+        pendingUsers,
+        marriedUsers,
+        mutedUsers,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching user count:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching user statistics",
+    });
+  }
+};
+
+module.exports = { updateStatusController, updateUserRoleController, getAllUsersController, getUserCountController };
 
