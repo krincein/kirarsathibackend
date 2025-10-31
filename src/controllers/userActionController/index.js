@@ -304,7 +304,7 @@ const getGenderBasedProfilesController = async (req, res) => {
       _id: { $ne: userId },
     })
       .select(
-        "fullName profileUrl imageCollectionUrls basic_information likes education_occupation createdAt"
+        "fullName profileUrl images basic_information likes education_occupation createdAt"
       )
       .limit(50)
       .sort({ createdAt: -1 });
