@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
       required: [true, "Kindly provide your full name."],
       trim: true,
     },
-    
+
     email: {
       type: String,
       unique: true,
@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
         "Please provide a valid email address.",
       ],
     },
-    
+
     phoneNo: {
       type: String,
       required: [true, "Kindly provide a phone number."],
@@ -146,15 +146,14 @@ const userSchema = new mongoose.Schema(
     },
 
     partner_preference: {
-      education: String,
-      occupation: String,
+      partnerEducation: String,
+      partnerOccupation: String,
       aboutPartner: String,
     },
 
     hobbies_interests_skills: {
-      hobbies: [String],
-      interests: [String],
-      skills: [String],
+      hobbies: String,
+      interests: String,
     },
 
     likes: [
