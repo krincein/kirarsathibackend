@@ -595,7 +595,9 @@ const getPendingShortlistRequestsController = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Pending shortlist requests fetched successfully.",
-      total: currentUser.pendingShortlistRequests.length,
+      totalShortlisted: currentUser.shortListed.length,
+      totalPendingRequests: currentUser.pendingShortlistRequests.length,
+      totalSentRequests: currentUser.sendShortlistRequests.length,
       data: currentUser.pendingShortlistRequests,
     });
   } catch (error) {
@@ -625,7 +627,9 @@ const getSentShortlistRequestsController = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Sent shortlist requests fetched successfully.",
-      total: currentUser.sendShortlistRequests.length,
+      totalShortlisted: currentUser.shortListed.length,
+      totalPendingRequests: currentUser.pendingShortlistRequests.length,
+      totalSentRequests: currentUser.sendShortlistRequests.length,
       data: currentUser.sendShortlistRequests,
     });
   } catch (error) {
