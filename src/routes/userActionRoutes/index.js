@@ -11,6 +11,7 @@ const {
   acceptShortlistRequestController,
   rejectShortlistRequestController,
   getPendingShortlistRequestsController,
+  getSentShortlistRequestsController,
   getShortlistStatusController,
   getShortlistedUsersController,
   updateUserImages,
@@ -46,6 +47,9 @@ userActionRoute
 userActionRoute
   .route("/get-pending-shortlist-requests")
   .get(isAuthorized, getPendingShortlistRequestsController);
+userActionRoute
+  .route("/get-sent-shortlist-requests")
+  .get(isAuthorized, getSentShortlistRequestsController);
 userActionRoute
   .route("/get-shortlist-status/:targetUserId")
   .get(isAuthorized, getShortlistStatusController);

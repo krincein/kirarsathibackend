@@ -332,6 +332,7 @@ const sendShortlistRequestController = async (req, res) => {
     const targetUserId = req.params.targetUserId;
     const currentUserId = req.user._id;
 
+    // Prevent self-shortlisting
     if (currentUserId.equals(targetUserId)) {
       return res.status(400).json({
         success: false,
@@ -339,32 +340,40 @@ const sendShortlistRequestController = async (req, res) => {
       });
     }
 
+    // Fetch both users
     const [targetUser, currentUser] = await Promise.all([
       UserSchema.findById(targetUserId),
       UserSchema.findById(currentUserId),
     ]);
 
-    if (!targetUser) {
+    if (!targetUser || !currentUser) {
       return res.status(404).json({
         success: false,
-        message: "Target user not found.",
+        message: "User not found.",
       });
     }
 
-    // ✅ Check if already shortlisted or requested
-    if (
+    // ✅ Check if request already exists
+    const alreadyRequested =
       targetUser.pendingShortlistRequests.includes(currentUserId) ||
-      targetUser.shortListed.includes(currentUserId) ||
-      currentUser.shortListed.includes(targetUserId)
-    ) {
+      currentUser.sendShortlistRequests.includes(targetUserId);
+
+    const alreadyShortlisted =
+      targetUser.shortListed?.some((s) => s.user.toString() === currentUserId.toString()) ||
+      currentUser.shortListed?.some((s) => s.user.toString() === targetUserId.toString());
+
+    if (alreadyRequested || alreadyShortlisted) {
       return res.status(400).json({
         success: false,
         message: "Request already sent or user already shortlisted.",
       });
     }
 
+    // ✅ Push IDs into respective arrays
     targetUser.pendingShortlistRequests.push(currentUserId);
-    await targetUser.save();
+    currentUser.sendShortlistRequests.push(targetUserId);
+
+    await Promise.all([targetUser.save(), currentUser.save()]);
 
     res.status(200).json({
       success: true,
@@ -481,7 +490,7 @@ const rejectShortlistRequestController = async (req, res) => {
   }
 };
 
-// ✅ Get Pending Requests
+// ✅ Get Pending Shortlist Requests (Received Requests)
 const getPendingShortlistRequestsController = async (req, res) => {
   try {
     const currentUserId = req.user._id;
@@ -489,9 +498,16 @@ const getPendingShortlistRequestsController = async (req, res) => {
     const currentUser = await UserSchema.findById(currentUserId)
       .populate(
         "pendingShortlistRequests",
-        "fullName email images.profileUrl basic_information.gender"
+        "fullName email images.profileUrl basic_information.gender basic_information.dateOfBirth"
       )
       .lean();
+
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -508,6 +524,43 @@ const getPendingShortlistRequestsController = async (req, res) => {
     });
   }
 };
+
+// ✅ Get Sent Shortlist Requests (Requests You Sent)
+const getSentShortlistRequestsController = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+
+    const currentUser = await UserSchema.findById(currentUserId)
+      .populate(
+        "sendShortlistRequests",
+        "fullName email images.profileUrl basic_information.gender basic_information.dateOfBirth"
+      )
+      .lean();
+
+    if (!currentUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Sent shortlist requests fetched successfully.",
+      totalRequests: currentUser.sendShortlistRequests.length,
+      requests: currentUser.sendShortlistRequests,
+    });
+  } catch (error) {
+    console.error("Get Sent Requests Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching sent requests.",
+      error: error.message,
+    });
+  }
+};
+
+
 
 // ✅ Get Shortlist Status
 const getShortlistStatusController = async (req, res) => {
@@ -716,6 +769,7 @@ module.exports = {
   acceptShortlistRequestController,
   rejectShortlistRequestController,
   getPendingShortlistRequestsController,
+  getSentShortlistRequestsController,
   getShortlistedUsersController,
   getShortlistStatusController,
   uploadSingleFile,
