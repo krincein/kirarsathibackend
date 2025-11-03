@@ -12,8 +12,10 @@ const {
   getGenderBasedProfilesController,
   sendShortlistRequestController,
   acceptShortlistRequestController,
+  rejectShortlistRequestController,
   getPendingShortlistRequestsController,
   getShortlistStatusController,
+  getShortlistedUsersController,
   updateUserImages,
   addImageToCollection
 } = require("./userActionController");
@@ -30,6 +32,7 @@ module.exports = {
   getGenderBasedProfilesController,
   sendShortlistRequestController,
   acceptShortlistRequestController,
+  rejectShortlistRequestController,
   getPendingShortlistRequestsController,
   getShortlistStatusController,
   updateStatusController,
@@ -37,5 +40,6 @@ module.exports = {
   getAllUsersController,
   getUserCountController,
   updateUserImages,
-  addImageToCollection
+  addImageToCollection,
+  getShortlistedUsersController
 };

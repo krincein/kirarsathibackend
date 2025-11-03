@@ -9,8 +9,10 @@ const {
   getGenderBasedProfilesController,
   sendShortlistRequestController,
   acceptShortlistRequestController,
+  rejectShortlistRequestController,
   getPendingShortlistRequestsController,
   getShortlistStatusController,
+  getShortlistedUsersController,
   updateUserImages,
   addImageToCollection
 } = require("../../controllers");
@@ -39,12 +41,17 @@ userActionRoute
   .route("/accept-shortlist-request/:requesterId")
   .post(isAuthorized, acceptShortlistRequestController);
 userActionRoute
+  .route("/reject-shortlist-request/:requesterId")
+  .post(isAuthorized, rejectShortlistRequestController);
+userActionRoute
   .route("/get-pending-shortlist-requests")
   .get(isAuthorized, getPendingShortlistRequestsController);
 userActionRoute
   .route("/get-shortlist-status/:targetUserId")
   .get(isAuthorized, getShortlistStatusController);
-
+userActionRoute
+  .route("/get-shortlisted-users")
+  .get(isAuthorized, getShortlistedUsersController);
 
 userActionRoute
   .route("/update-user-images")
