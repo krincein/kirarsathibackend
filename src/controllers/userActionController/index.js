@@ -646,7 +646,7 @@ const getShortlistedUsersController = async (req, res) => {
     const currentUser = await UserSchema.findById(currentUserId)
       .populate({
         path: "shortListed.user",
-        select: "fullName email phoneNo images.profileUrl basic_information.gender status",
+        select: "fullName email phoneNo images.profileUrl basic_information.gender status basic_information.dateOfBirth education_occupation.occupation",
       })
       .lean();
 
