@@ -392,10 +392,10 @@ const addImageToCollection = async (req, res) => {
       : [imageCollectionUrls];
 
     // ✅ Check limit
-    if (existingImages.length + newImages.length > 5) {
+    if (existingImages.length + newImages.length > 6) {
       return res.status(400).json({
         success: false,
-        message: "You can only have up to 5 images in your collection.",
+        message: "You can only have up to 6 images in your collection.",
         currentCount: existingImages.length,
       });
     }
