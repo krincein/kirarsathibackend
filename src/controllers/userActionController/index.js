@@ -326,275 +326,6 @@ const getGenderBasedProfilesController = async (req, res) => {
   }
 };
 
-// ✅ Send Shortlist Request
-const sendShortlistRequestController = async (req, res) => {
-  try {
-    const targetUserId = req.params.targetUserId;
-    const currentUserId = req.user._id;
-
-    if (currentUserId.equals(targetUserId)) {
-      return res.status(400).json({
-        success: false,
-        message: "You cannot shortlist your own profile.",
-      });
-    }
-
-    const [targetUser, currentUser] = await Promise.all([
-      UserSchema.findById(targetUserId),
-      UserSchema.findById(currentUserId),
-    ]);
-
-    if (!targetUser || !currentUser) {
-      return res.status(404).json({ success: false, message: "User not found." });
-    }
-
-    // Prevent duplicate request or already connected
-    const alreadyRequested =
-      targetUser.pendingShortlistRequests.includes(currentUserId) ||
-      currentUser.sendShortlistRequests.includes(targetUserId);
-
-    const alreadyShortlisted =
-      targetUser.shortListed?.some((s) => s.user.toString() === currentUserId.toString()) ||
-      currentUser.shortListed?.some((s) => s.user.toString() === targetUserId.toString());
-
-    if (alreadyRequested || alreadyShortlisted) {
-      return res.status(400).json({
-        success: false,
-        message: "Request already sent or user already shortlisted.",
-      });
-    }
-
-    // Push IDs into respective arrays
-    targetUser.pendingShortlistRequests.push(currentUserId);
-    currentUser.sendShortlistRequests.push(targetUserId);
-
-    await Promise.all([targetUser.save(), currentUser.save()]);
-
-    res.status(200).json({
-      success: true,
-      message: "Shortlist request sent successfully.",
-    });
-  } catch (error) {
-    console.error("Shortlist Request Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while sending shortlist request.",
-      error: error.message,
-    });
-  }
-};
-
-
-// ✅ Accept Shortlist Request
-const acceptShortlistRequestController = async (req, res) => {
-  try {
-    const requesterId = req.params.requesterId; // sender of request
-    const currentUserId = req.user._id; // receiver
-
-    const [currentUser, requesterUser] = await Promise.all([
-      UserSchema.findById(currentUserId),
-      UserSchema.findById(requesterId),
-    ]);
-
-    if (!currentUser || !requesterUser) {
-      return res.status(404).json({ success: false, message: "User not found." });
-    }
-
-    // Check pending request
-    if (!currentUser.pendingShortlistRequests.includes(requesterId)) {
-      return res.status(400).json({
-        success: false,
-        message: "No pending shortlist request from this user.",
-      });
-    }
-
-    // Prevent duplicates
-    const alreadyConnected =
-      currentUser.shortListed.some((s) => s.user.toString() === requesterId.toString()) &&
-      requesterUser.shortListed.some((s) => s.user.toString() === currentUserId.toString());
-
-    if (alreadyConnected) {
-      return res.status(400).json({ success: false, message: "Already connected." });
-    }
-
-    // ✅ Remove from pending + sender’s sent list
-    currentUser.pendingShortlistRequests.pull(requesterId);
-    requesterUser.sendShortlistRequests.pull(currentUserId);
-
-    // ✅ Add both to each other's shortlist
-    currentUser.shortListed.push({ user: requesterId, status: "accepted" });
-    requesterUser.shortListed.push({ user: currentUserId, status: "accepted" });
-
-    await Promise.all([currentUser.save(), requesterUser.save()]);
-
-    res.status(200).json({
-      success: true,
-      message: "Shortlist request accepted successfully.",
-    });
-  } catch (error) {
-    console.error("Accept Shortlist Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while accepting shortlist request.",
-      error: error.message,
-    });
-  }
-};
-
-
-// Reject Shortlist Request
-const rejectShortlistRequestController = async (req, res) => {
-  try {
-    const requesterId = req.params.requesterId;
-    const currentUserId = req.user._id;
-
-    const [currentUser, requesterUser] = await Promise.all([
-      UserSchema.findById(currentUserId),
-      UserSchema.findById(requesterId),
-    ]);
-
-    if (!currentUser || !requesterUser) {
-      return res.status(404).json({ success: false, message: "User not found." });
-    }
-
-    if (!currentUser.pendingShortlistRequests.includes(requesterId)) {
-      return res.status(400).json({
-        success: false,
-        message: "No pending shortlist request from this user.",
-      });
-    }
-
-    // Remove pending + remove from sender’s sent list
-    currentUser.pendingShortlistRequests.pull(requesterId);
-    requesterUser.sendShortlistRequests.pull(currentUserId);
-
-    await Promise.all([currentUser.save(), requesterUser.save()]);
-
-    res.status(200).json({
-      success: true,
-      message: "Shortlist request rejected successfully.",
-    });
-  } catch (error) {
-    console.error("Reject Shortlist Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while rejecting shortlist request.",
-      error: error.message,
-    });
-  }
-};
-
-// ✅ Get Pending Shortlist Requests (Received Requests)
-const getPendingShortlistRequestsController = async (req, res) => {
-  try {
-    const currentUser = await UserSchema.findById(req.user._id)
-      .populate(
-        "pendingShortlistRequests",
-        "fullName email images.profileUrl basic_information.gender basic_information.dateOfBirth"
-      )
-      .lean();
-
-    if (!currentUser) {
-      return res.status(404).json({ success: false, message: "User not found." });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Pending shortlist requests fetched successfully.",
-      total: currentUser.pendingShortlistRequests.length,
-      requests: currentUser.pendingShortlistRequests,
-    });
-  } catch (error) {
-    console.error("Get Pending Requests Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while fetching pending requests.",
-      error: error.message,
-    });
-  }
-};
-
-// ✅ Get Sent Shortlist Requests (Requests You Sent)
-const getSentShortlistRequestsController = async (req, res) => {
-  try {
-    const currentUser = await UserSchema.findById(req.user._id)
-      .populate(
-        "sendShortlistRequests",
-        "fullName email images.profileUrl basic_information.gender basic_information.dateOfBirth"
-      )
-      .lean();
-
-    if (!currentUser) {
-      return res.status(404).json({ success: false, message: "User not found." });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "Sent shortlist requests fetched successfully.",
-      total: currentUser.sendShortlistRequests.length,
-      requests: currentUser.sendShortlistRequests,
-    });
-  } catch (error) {
-    console.error("Get Sent Requests Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while fetching sent requests.",
-      error: error.message,
-    });
-  }
-};
-
-// ✅ Get Shortlisted Users (with status and mutual info)
-const getShortlistedUsersController = async (req, res) => {
-  try {
-    const currentUserId = req.user._id;
-
-    const currentUser = await UserSchema.findById(currentUserId)
-      .populate({
-        path: "shortListed.user",
-        select: "fullName email phoneNo images.profileUrl basic_information.gender status",
-      })
-      .lean();
-
-    if (!currentUser) {
-      return res.status(404).json({ success: false, message: "User not found." });
-    }
-
-    // Compute mutual connections efficiently
-    const shortlistedUsers = await Promise.all(
-      currentUser.shortListed.map(async (item) => {
-        const isMutual = await UserSchema.exists({
-          _id: item.user._id,
-          "shortListed.user": currentUserId,
-          "shortListed.status": "accepted",
-        });
-
-        return {
-          ...item.user,
-          shortlistStatus: item.status,
-          isMutual: !!isMutual,
-        };
-      })
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Shortlisted users fetched successfully.",
-      total: shortlistedUsers.length,
-      shortlistedUsers,
-    });
-  } catch (error) {
-    console.error("Get Shortlisted Users Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while fetching shortlisted users.",
-      error: error.message,
-    });
-  }
-};
-
-
-
 const updateUserImages = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -686,6 +417,271 @@ const addImageToCollection = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Server error while adding image to collection.",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Send Shortlist Request
+const sendShortlistRequestController = async (req, res) => {
+  try {
+    const targetUserId = req.params.targetUserId;
+    const currentUserId = req.user._id;
+
+    if (currentUserId.equals(targetUserId)) {
+      return res.status(400).json({
+        success: false,
+        message: "You cannot shortlist your own profile.",
+      });
+    }
+
+    const [targetUser, currentUser] = await Promise.all([
+      UserSchema.findById(targetUserId),
+      UserSchema.findById(currentUserId),
+    ]);
+
+    if (!targetUser || !currentUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Prevent duplicate request or already connected
+    const alreadyRequested =
+      targetUser.pendingShortlistRequests.includes(currentUserId) ||
+      currentUser.sendShortlistRequests.includes(targetUserId);
+
+    const alreadyShortlisted =
+      targetUser.shortListed?.some((s) => s.user.toString() === currentUserId.toString()) ||
+      currentUser.shortListed?.some((s) => s.user.toString() === targetUserId.toString());
+
+    if (alreadyRequested || alreadyShortlisted) {
+      return res.status(400).json({
+        success: false,
+        message: "Request already sent or user already shortlisted.",
+      });
+    }
+
+    // Push IDs into respective arrays
+    targetUser.pendingShortlistRequests.push(currentUserId);
+    currentUser.sendShortlistRequests.push(targetUserId);
+
+    await Promise.all([targetUser.save(), currentUser.save()]);
+
+    res.status(200).json({
+      success: true,
+      message: "Shortlist request sent successfully.",
+    });
+  } catch (error) {
+    console.error("Shortlist Request Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while sending shortlist request.",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Accept Shortlist Request
+const acceptShortlistRequestController = async (req, res) => {
+  try {
+    const requesterId = req.params.requesterId; // sender of request
+    const currentUserId = req.user._id; // receiver
+
+    const [currentUser, requesterUser] = await Promise.all([
+      UserSchema.findById(currentUserId),
+      UserSchema.findById(requesterId),
+    ]);
+
+    if (!currentUser || !requesterUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Check pending request
+    if (!currentUser.pendingShortlistRequests.includes(requesterId)) {
+      return res.status(400).json({
+        success: false,
+        message: "No pending shortlist request from this user.",
+      });
+    }
+
+    // Prevent duplicates
+    const alreadyConnected =
+      currentUser.shortListed.some((s) => s.user.toString() === requesterId.toString()) &&
+      requesterUser.shortListed.some((s) => s.user.toString() === currentUserId.toString());
+
+    if (alreadyConnected) {
+      return res.status(400).json({ success: false, message: "Already connected." });
+    }
+
+    // ✅ Remove from pending + sender’s sent list
+    currentUser.pendingShortlistRequests.pull(requesterId);
+    requesterUser.sendShortlistRequests.pull(currentUserId);
+
+    // ✅ Add both to each other's shortlist
+    currentUser.shortListed.push({ user: requesterId, status: "accepted" });
+    requesterUser.shortListed.push({ user: currentUserId, status: "accepted" });
+
+    await Promise.all([currentUser.save(), requesterUser.save()]);
+
+    res.status(200).json({
+      success: true,
+      message: "Shortlist request accepted successfully.",
+    });
+  } catch (error) {
+    console.error("Accept Shortlist Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while accepting shortlist request.",
+      error: error.message,
+    });
+  }
+};
+
+// Reject Shortlist Request
+const rejectShortlistRequestController = async (req, res) => {
+  try {
+    const requesterId = req.params.requesterId;
+    const currentUserId = req.user._id;
+
+    const [currentUser, requesterUser] = await Promise.all([
+      UserSchema.findById(currentUserId),
+      UserSchema.findById(requesterId),
+    ]);
+
+    if (!currentUser || !requesterUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    if (!currentUser.pendingShortlistRequests.includes(requesterId)) {
+      return res.status(400).json({
+        success: false,
+        message: "No pending shortlist request from this user.",
+      });
+    }
+
+    // Remove pending + remove from sender’s sent list
+    currentUser.pendingShortlistRequests.pull(requesterId);
+    requesterUser.sendShortlistRequests.pull(currentUserId);
+
+    await Promise.all([currentUser.save(), requesterUser.save()]);
+
+    res.status(200).json({
+      success: true,
+      message: "Shortlist request rejected successfully.",
+    });
+  } catch (error) {
+    console.error("Reject Shortlist Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while rejecting shortlist request.",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Get Pending Shortlist Requests (Received Requests)
+const getPendingShortlistRequestsController = async (req, res) => {
+  try {
+    const currentUser = await UserSchema.findById(req.user._id)
+      .populate(
+        "pendingShortlistRequests",
+        "fullName email images.profileUrl basic_information.gender basic_information.dateOfBirth"
+      )
+      .lean();
+
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Pending shortlist requests fetched successfully.",
+      total: currentUser.pendingShortlistRequests.length,
+      data: currentUser.pendingShortlistRequests,
+    });
+  } catch (error) {
+    console.error("Get Pending Requests Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching pending requests.",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Get Sent Shortlist Requests (Requests You Sent)
+const getSentShortlistRequestsController = async (req, res) => {
+  try {
+    const currentUser = await UserSchema.findById(req.user._id)
+      .populate(
+        "sendShortlistRequests",
+        "fullName email images.profileUrl basic_information.gender basic_information.dateOfBirth"
+      )
+      .lean();
+
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Sent shortlist requests fetched successfully.",
+      total: currentUser.sendShortlistRequests.length,
+      data: currentUser.sendShortlistRequests,
+    });
+  } catch (error) {
+    console.error("Get Sent Requests Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching sent requests.",
+      error: error.message,
+    });
+  }
+};
+
+// ✅ Get Shortlisted Users (with status and mutual info)
+const getShortlistedUsersController = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+
+    const currentUser = await UserSchema.findById(currentUserId)
+      .populate({
+        path: "shortListed.user",
+        select: "fullName email phoneNo images.profileUrl basic_information.gender status",
+      })
+      .lean();
+
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found." });
+    }
+
+    // Compute mutual connections efficiently
+    const shortlistedUsers = await Promise.all(
+      currentUser.shortListed.map(async (item) => {
+        const isMutual = await UserSchema.exists({
+          _id: item.user._id,
+          "shortListed.user": currentUserId,
+          "shortListed.status": "accepted",
+        });
+
+        return {
+          ...item.user,
+          shortlistStatus: item.status,
+          isMutual: !!isMutual,
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Shortlisted users fetched successfully.",
+      total: shortlistedUsers.length,
+      data: shortlistedUsers,
+    });
+  } catch (error) {
+    console.error("Get Shortlisted Users Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching shortlisted users.",
       error: error.message,
     });
   }
