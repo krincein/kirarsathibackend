@@ -4,6 +4,7 @@ const path = require("path");
 
 const app = require("../../../main");
 const { isAuthorized } = require("../../middleware");
+const { UserSchema } = require("../../schemaCollections");
 
 const fileUploadRoute = express.Router();
 
@@ -29,30 +30,77 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 2 * 1024 * 1024 },
+    limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-const uploadSingleFile = (req, res) => {
+const uploadSingleFile = async (req, res) => {
+
+    const userId = req.user._id;
+
     if (!req.file) {
         return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
-    res.status(200).json({
+    const user = await UserSchema.findByIdAndUpdate(
+        userId,
+        { "images.profileUrl": `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` },
+        { new: true }
+    );
+
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: "User not found.",
+        });
+    }
+
+    return res.status(200).json({
         success: true,
         message: "File uploaded successfully",
-        file: req.file,
+        file: `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`,
     });
 }
 
-const uploadMultipleFiles = (req, res) => {
+const uploadMultipleFiles = async (req, res) => {
     if (!req.files || req.files.length === 0) {
         return res.status(400).json({ success: false, message: "No files uploaded" });
     }
 
-    res.status(200).json({
+    const userId = req.user._id;
+
+    const user = await UserSchema.findById(userId);
+    if (!user) {
+        return res.status(404).json({
+            success: false,
+            message: "User not found.",
+        });
+    }
+
+    const existingImages = user.images?.imageCollectionUrls || [];
+    const newImages = Array.isArray(req.files)
+        ? req.files
+        : [req.files];
+
+    // ✅ Check limit
+    if (existingImages.length + newImages.length > 6) {
+        return res.status(400).json({
+            success: false,
+            message: "You can only have up to 6 images in your collection.",
+            currentCount: existingImages.length,
+        });
+    }
+
+    // ✅ Add new image(s)
+    const updatedUser = await UserSchema.findByIdAndUpdate(
+        userId,
+        { $push: { "images.imageCollectionUrls": { $each: newImages.map(file => `${req.protocol}://${req.get("host")}/uploads/${file.filename}`) } } },
+        { new: true }
+    );
+
+    return res.status(200).json({
         success: true,
-        message: "Files uploaded successfully",
-        files: req.files,
+        message: "Image(s) added to collection successfully.",
+        imageCollectionUrls: updatedUser.images.imageCollectionUrls,
     });
 }
 
@@ -62,7 +110,7 @@ fileUploadRoute
 
 fileUploadRoute
     .route("/multiple-files")
-    .post(isAuthorized, upload.array("images", 5), uploadMultipleFiles);
+    .post(isAuthorized, upload.array("images", 6), uploadMultipleFiles);
 
 const fileUpload = app.use("/upload", fileUploadRoute);
 
