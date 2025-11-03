@@ -671,10 +671,17 @@ const getShortlistedUsersController = async (req, res) => {
       })
     );
 
+    // ✅ Compute counts
+    const pendingCount = currentUser.pendingShortlistRequests?.length || 0;
+    const sentCount = currentUser.sendShortlistRequests?.length || 0;
+    const shortlistedCount = shortlistedUsers.length;
+
     res.status(200).json({
       success: true,
       message: "Shortlisted users fetched successfully.",
-      total: shortlistedUsers.length,
+      totalShortlisted: shortlistedCount,
+      totalPendingRequests: pendingCount,
+      totalSentRequests: sentCount,
       data: shortlistedUsers,
     });
   } catch (error) {
