@@ -15,7 +15,6 @@ const {
   rejectShortlistRequestController,
   getPendingShortlistRequestsController,
   getSentShortlistRequestsController,
-  getShortlistStatusController,
   getShortlistedUsersController,
   updateUserImages,
   addImageToCollection
@@ -36,7 +35,6 @@ module.exports = {
   rejectShortlistRequestController,
   getPendingShortlistRequestsController,
   getSentShortlistRequestsController,
-  getShortlistStatusController,
   updateStatusController,
   updateUserRoleController,
   getAllUsersController,
