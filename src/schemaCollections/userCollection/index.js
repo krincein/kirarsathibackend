@@ -68,6 +68,7 @@ const userSchema = new mongoose.Schema(
     },
 
     basic_information: {
+      fullName: { type: String, trim: true },
       gender: {
         type: String,
         enum: ["male", "female"],
@@ -187,8 +188,23 @@ const userSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+
+    marriedWith: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
   { timestamps: true }
 );
+
+// ✅ Auto-sync fullName → basic_information.fullName
+userSchema.pre("save", function (next) {
+  if (this.fullName && (!this.basic_information || !this.basic_information.fullName)) {
+    if (!this.basic_information) this.basic_information = {};
+    this.basic_information.fullName = this.fullName;
+  }
+  next();
+});
 
 module.exports.UserSchema = mongoose.model("User", userSchema);

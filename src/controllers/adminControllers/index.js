@@ -183,5 +183,100 @@ const getUserCountController = async (req, res) => {
   }
 };
 
-module.exports = { updateStatusController, updateUserRoleController, getAllUsersController, getUserCountController };
+// ✅ Get Married With
+const updateUserStatusController = async (req, res) => {
+  try {
+    const adminUser = req.user; // from auth middleware
+    const { userId, status, marriedWith } = req.body;
+
+    // ✅ Check permission
+    if (!adminUser || !["admin", "superadmin"].includes(adminUser.role)) {
+      return res.status(403).json({ message: "Access denied. Admin only." });
+    }
+
+    // ✅ Validate required data
+    if (!userId || !status) {
+      return res.status(400).json({ message: "userId and status are required." });
+    }
+
+    // ✅ Check if user exists
+    const user = await UserSchema.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // ✅ Handle 'married' status logic
+    if (status === "married") {
+      if (!marriedWith) {
+        return res.status(400).json({
+          message: "Please provide 'marriedWith' user ID to set status as married.",
+        });
+      }
+
+      // Fetch partner
+      const partner = await UserSchema.findById(marriedWith);
+      if (!partner) {
+        return res.status(404).json({ message: "Partner not found." });
+      }
+
+      // Prevent marrying self
+      if (userId === marriedWith) {
+        return res
+          .status(400)
+          .json({ message: "A user cannot be married to themselves." });
+      }
+
+      // Check if already married
+      if (user.status === "married" && user.marriedWith) {
+        return res
+          .status(400)
+          .json({ message: "This user is already married." });
+      }
+      if (partner.status === "married" && partner.marriedWith) {
+        return res
+          .status(400)
+          .json({ message: "The selected partner is already married." });
+      }
+
+      // ✅ Update both users
+      user.status = "married";
+      user.marriedWith = partner._id;
+
+      partner.status = "married";
+      partner.marriedWith = user._id;
+
+      await user.save();
+      await partner.save();
+
+      return res.status(200).json({
+        message: "Marriage updated successfully.",
+        user,
+        partner,
+      });
+    }
+
+    // ✅ Handle non-married statuses
+    user.status = status;
+    user.marriedWith = null; // clear marriage link
+    await user.save();
+
+    res.status(200).json({
+      message: "User status updated successfully.",
+      user,
+    });
+  } catch (error) {
+    console.error("Error updating user status:", error);
+    res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+
+module.exports = {
+  updateStatusController, updateUserRoleController,
+  getAllUsersController, getUserCountController,
+  updateUserStatusController
+};
 

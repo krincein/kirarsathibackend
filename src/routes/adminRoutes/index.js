@@ -1,7 +1,7 @@
 const express = require("express");
 const app = require("../../../main");
 
-const { updateStatusController, updateUserRoleController, getAllUsersController, getUserCountController } = require("../../controllers");
+const { updateStatusController, updateUserRoleController, getAllUsersController, getUserCountController, updateUserStatusController } = require("../../controllers");
 
 const { isAuthorized } = require("../../middleware");
 
@@ -11,6 +11,7 @@ adminRoute.route("/update-status/:id").put(isAuthorized, updateStatusController)
 adminRoute.route("/update-role/:id").put(isAuthorized, updateUserRoleController);
 adminRoute.route("/get-all-users").get(isAuthorized, getAllUsersController);
 adminRoute.route("/get-user-count").get(isAuthorized, getUserCountController);
+adminRoute.route("/update-user-status").put(isAuthorized, updateUserStatusController);
 
 const admin = app.use("/admin", adminRoute);
 

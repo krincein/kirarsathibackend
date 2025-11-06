@@ -19,7 +19,9 @@ const {
   updateUserImages,
   addImageToCollection
 } = require("./userActionController");
-const { updateStatusController, updateUserRoleController, getAllUsersController, getUserCountController } = require("./adminControllers");
+const { updateStatusController, updateUserRoleController, getAllUsersController, getUserCountController,
+  updateUserStatusController
+} = require("./adminControllers");
 
 module.exports = {
   signupController,
@@ -41,5 +43,6 @@ module.exports = {
   getUserCountController,
   updateUserImages,
   addImageToCollection,
-  getShortlistedUsersController
+  getShortlistedUsersController,
+  updateUserStatusController
 };
